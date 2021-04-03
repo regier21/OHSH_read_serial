@@ -1,35 +1,41 @@
 #define NUM_JOINTS 1
+#define BAUD_RATE 115200
 
 // The serial to read signals from. Typically Serial2 for RPi, Serial for USB (helpful for debugging)
-// Make sure to uncomment SigSerial.begin in the setup if not using Serial, and to comment it otherwise
+// You must also uncomment SigSerial.begin() if this is set to be not Serial
 #define SigSerial Serial
 
 int angles[NUM_JOINTS];
 
-bool parseCommand(String&);
+bool readCommand();
 
 void setup() {
-  Serial.begin(115200);
-  //SigSerial.begin(115200);
+  Serial.begin(BAUD_RATE);
+  // SigSerial.begin(BAUD_RATE);
 }
 
 void loop() {
-  if (SigSerial.available() > 0) {
-    Serial.println("Reading...");
-    
-    // read the incoming command:
-    // TODO: Set quick timeout in case missed newline
-    String str = SigSerial.readStringUntil('\n');
-    if(parseCommand(str)){
-      Serial.println("Angles parsed successfully. Last angle:" + String(angles[NUM_JOINTS-1]));
-    } else{
-      Serial.println("Failed to parse command");
-    }
+  if (readCommand()) {
+    Serial.println("Angles updated");
     
   }
 }
 
-bool parseCommand(String& command){
+/**
+ * Reads command from SigSerial. 
+ * Command must be of the form <#,#,...,#>, where the
+ * number of numers is at least NUM_JOINTS.
+ * 
+ * Returns: true if read successful, false otherwise
+ * 
+ * Side effects: angles modified. This may occur even if false
+ * is returned, so if the old angles are needed save them before
+ * calling.
+ */
+bool readCommand(){
+  if (SigSerial.available() <= 0) return false;
+  // TODO: Set quick timeout in case missed newline
+  String command = SigSerial.readStringUntil('\n');
   if(!command.startsWith("<") || !command.endsWith(">")) return false;
   const char* input = command.c_str() + 1; //Skip opening '<'
   char* endPtr;
