@@ -1,5 +1,6 @@
 #define NUM_JOINTS 1
 #define BAUD_RATE 115200
+#define SERIAL_TIMEOUT 20
 
 // The serial to read signals from. Typically Serial2 for RPi, Serial for USB (helpful for debugging)
 // You must also uncomment SigSerial.begin() if this is set to be not Serial
@@ -12,6 +13,7 @@ bool readCommand();
 void setup() {
   Serial.begin(BAUD_RATE);
   // SigSerial.begin(BAUD_RATE);
+  SigSerial.setTimeout(SERIAL_TIMEOUT);
 }
 
 void loop() {
@@ -34,7 +36,6 @@ void loop() {
  */
 bool readCommand(){
   if (SigSerial.available() <= 0) return false;
-  // TODO: Set quick timeout in case missed newline
   String command = SigSerial.readStringUntil('\n');
   if(!command.startsWith("<") || !command.endsWith(">")) return false;
   const char* input = command.c_str() + 1; //Skip opening '<'
